@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"; // Import useState, useEffect
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router"; // For navigation after form submission
 import { Separator } from "../../ui/separator";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,55 +15,42 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "../../ui/textarea";
 
-// Updated form schema to accept a File
+// Updated form schema
 const formSchema = z.object({
   name: z.string().min(2).max(20),
   description: z.string().min(2).max(500).trim(),
-  logo: z
-    .instanceof(FileList)
-    .refine((files) => files?.length > 0, "Shop logo is required"),
 });
 
 const ShopForm = () => {
-  const [logoPreview, setLogoPreview] = useState<string | null>(null); // State for image preview
-  const [isClient, setIsClient] = useState(false); // Flag to check if it's client-side
-
+  const router = useRouter(); // Initialize router for navigation after submission
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
-      logo: undefined,
     },
   });
 
-  // Ensure we only update logo preview on the client
-  useEffect(() => {
-    setIsClient(true); // Set the client-side flag after component mounts
-  }, []);
-
+  // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const file = values.logo[0]; // Access the uploaded file
     const shopData = {
       name: values.name,
       description: values.description,
-      logo: file.name, // Include file name; saving the file itself requires a more advanced setup
     };
 
-    // Send a POST request to the JSON server
     try {
-      const response = await fetch("http://localhost:3001/shops", {
+      const response = await fetch("http://localhost:5000/shops", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(shopData), // Convert object to JSON
+        body: JSON.stringify(shopData),
       });
 
       if (response.ok) {
         console.log("Shop created successfully!");
-        // Redirect to dashboard
-        window.location.href = "http://localhost:3000/";
+        // Redirect to the dashboard or homepage
+        router.push("/dashboard"); // Redirect using Next.js router
       } else {
         console.error("Failed to create shop");
       }
@@ -73,38 +60,57 @@ const ShopForm = () => {
   };
 
   return (
-    <div className="p-10">
-      <p className="text-heading2-bold">Create Shop</p>
+    <div className="p-10 space-y-10 max-w-3xl mx-auto bg-white rounded-lg shadow-lg">
+      {/* Delete Shop Button */}
+      <div className="flex justify-start">
+        <Button variant="destructive" size="sm">
+          Delete Shop
+        </Button>
+      </div>
+
+      {/* Form Title */}
+      <p className="text-2xl font-bold">Create Shop</p>
       <Separator className="bg-grey-1 mt-4 mb-7" />
+
+      {/* Form */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Shop Name */}
+          {/* Shop Name Field */}
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Shop Name</FormLabel>
+                <FormLabel className="text-lg font-semibold">
+                  Shop Name
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Shop name" {...field} />
+                  <Input
+                    placeholder="Enter shop name"
+                    {...field}
+                    className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Shop Description */}
+          {/* Shop Description Field */}
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Shop Description</FormLabel>
+                <FormLabel className="text-lg font-semibold">
+                  Shop Description
+                </FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Briefly describe what the shop sells and where it is located"
+                    placeholder="Describe what the shop sells and where it's located"
                     {...field}
                     rows={5}
+                    className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </FormControl>
                 <FormMessage />
@@ -112,49 +118,27 @@ const ShopForm = () => {
             )}
           />
 
-          {/* Shop Logo Upload */}
-          <FormField
-            control={form.control}
-            name="logo"
-            render={({ field: { onChange, ref } }) => (
-              <FormItem>
-                <FormLabel>Shop Logo</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        onChange(e.target.files);
-                        if (isClient) {
-                          setLogoPreview(URL.createObjectURL(file)); // Create preview URL on client-side
-                        }
-                      }
-                    }}
-                    ref={ref}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Display Logo Preview */}
-          {logoPreview && (
-            <div className="mt-4">
-              <p className="text-sm font-semibold mb-2">Logo Preview:</p>
-              <img
-                src={logoPreview}
-                alt="Shop Logo Preview"
-                className="w-32 h-32 object-cover rounded border"
-              />
-            </div>
-          )}
-
-          <Button type="submit">Submit</Button>
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full py-3 text-white bg-blue-500 hover:bg-blue-600 mt-6"
+          >
+            Submit
+          </Button>
         </form>
       </Form>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between mt-8 space-x-4">
+        {/* View Products Button */}
+        <Button variant="outline" className="w-full py-3">
+          View Products
+        </Button>
+        {/* Edit Shop Button */}
+        <Button variant="secondary" className="w-full py-3">
+          Edit Shop
+        </Button>
+      </div>
     </div>
   );
 };
