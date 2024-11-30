@@ -1,0 +1,16 @@
+{
+  "shops": [
+    {
+      "id": "bcf1",
+      "name": "daniel mutinda",
+      "description": "It here is in Kenya. Going doen",
+      "logo": "images.jpeg"
+    },
+    {
+      "id": "5bb2",
+      "name": "@Makutipark10",
+      "description": "wkdks akkdks akkdkska",
+      "logo": "machine-learning-white-linear-icon-for-dark-theme-vector-40314298.jpg"
+    }
+  ]
+}
