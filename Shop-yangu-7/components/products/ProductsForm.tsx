@@ -1,146 +1,145 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
-interface ProductFormProps {
-  shopId: string;
-}
+// Updated form schema for product (name, description, price, etc.)
+const formSchema = z.object({
+  name: z.string().min(2).max(20),
+  description: z.string().min(2).max(500).trim(),
+  price: z.number().min(0.01, "Price must be greater than zero"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+});
 
-export default function ProductForm({ shopId }: ProductFormProps) {
-  const [productName, setProductName] = useState("");
-  const [price, setPrice] = useState<number | string>("");
-  const [stockLevel, setStockLevel] = useState<number | string>("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const ProductForm = () => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0.0,
+      quantity: 1,
+    },
+  });
 
-  const router = useRouter();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const productData = {
+      name: values.name,
+      description: values.description,
+      price: values.price,
+      quantity: values.quantity,
+    };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Form validation
-    if (!productName || !price || !stockLevel || !description || !image) {
-      setError("All fields are required.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name", productName);
-    formData.append("price", price.toString());
-    formData.append("stockLevel", stockLevel.toString());
-    formData.append("description", description);
-    formData.append("image", image);
-
-    // Sending the product details to the server
-    const response = await fetch(
-      `http://localhost:3001/shops/${shopId}/products`,
-      {
+    // Send a POST request to the json-server endpoint (http://localhost:5000/products)
+    try {
+      const response = await fetch("http://localhost:5000/products", {
         method: "POST",
-        body: formData,
-      }
-    );
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
 
-    if (response.ok) {
-      // After successfully adding the product, redirect to the shop's page or dashboard
-      router.push(`/shops/${shopId}`);
-    } else {
-      setError("There was an error adding the product.");
+      if (response.ok) {
+        console.log("Product created successfully!");
+        // Redirect to the products page or another page
+        window.location.href = "http://localhost:3000/products"; // Update to redirect to the desired location
+      } else {
+        console.error("Failed to create product");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
   return (
-    <div className="p-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        Add New Product to Your Shop
-      </h1>
-
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-4xl mx-auto bg-white p-8 rounded-md shadow-md"
-      >
-        <div className="mb-6">
-          <label htmlFor="productName" className="block text-gray-700 mb-2">
-            Product Name
-          </label>
-          <input
-            type="text"
-            id="productName"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            required
+    <div className="p-10">
+      <p className="text-heading2-bold">Create Product</p>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Product Name */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Product name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="price" className="block text-gray-700 mb-2">
-            Price
-          </label>
-          <input
-            type="number"
-            id="price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            required
+          {/* Product Description */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ }) => (
+              <FormItem>
+                <FormLabel>Product Description</FormLabel>
+                <FormControl>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="stockLevel" className="block text-gray-700 mb-2">
-            Stock Level
-          </label>
-          <input
-            type="number"
-            id="stockLevel"
-            value={stockLevel}
-            onChange={(e) => setStockLevel(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            required
+          {/* Product Price */}
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Product price"
+                    {...field}
+                    step="0.01"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="description" className="block text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            rows={4}
-            required
+          {/* Product Quantity */}
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantity</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Product quantity"
+                    {...field}
+                    min="1"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="image" className="block text-gray-700 mb-2">
-            Product Image
-          </label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-
-        <div className="text-center">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition"
-          >
-            Add Product
-          </button>
-        </div>
-      </form>
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
     </div>
   );
-}
+};
+
+export default ProductForm;
