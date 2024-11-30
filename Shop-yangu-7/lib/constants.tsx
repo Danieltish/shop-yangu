@@ -16,7 +16,7 @@ export const navLinks = [
     label: "Create New Shop",
   },
   {
-    url: "/shops/new",
+    url: "/products/new",
     icon: <Shapes />,
     label: "Products",
   },
