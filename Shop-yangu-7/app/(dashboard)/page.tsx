@@ -7,7 +7,7 @@ interface Shop {
   id: number;
   name: string;
   description: string;
-  products?: any[]; // Assuming products are added later to the shop
+  products?: never[]; // Assuming products are added later to the shop
 }
 
 interface Product {
@@ -77,6 +77,7 @@ const Dashboard = () => {
   };
 
   // Submit edited shop details
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingShop) return;

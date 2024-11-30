@@ -17,6 +17,8 @@ const CreateProduct = () => {
   };
 
   return <ProductsForm onSubmit={handleProductSubmit} />;
+
+
 };
 
 export default CreateProduct;
